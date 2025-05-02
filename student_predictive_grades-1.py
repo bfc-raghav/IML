@@ -7,12 +7,14 @@ from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
 
 #add funtion
-
+global_model = RandomForestClassifier()
+global_le = LabelEncoder()
 
 # Please add funtion comment
 def load_dataset():
     file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv"), ("Excel files", "*.xlsx;*.xls")])
     if file_path:
+        global df
         try:
             if file_path.endswith('.csv'):
                 df = pd.read_csv(file_path)
@@ -27,14 +29,17 @@ def load_dataset():
 # Please add funtion comment
 def train_model(df, features, target):
     try:
-        X = df[features]
-        y = df[target]
+        X = global_le.fit_transform(df[features])
+        y = global_le.fit_transform(df[target])
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train = X_train.reshape(-1,1)
+        X_test = X_test.reshape(-1,1)
         model = RandomForestClassifier()
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
         messagebox.showinfo("Model Trained", f"Model trained successfully! Accuracy: {accuracy:.2f}")
+        global_model = model
         return model
     except Exception as e:
         messagebox.showerror("Error", f"Failed to train model: {e}")
@@ -43,7 +48,8 @@ def train_model(df, features, target):
 # Please add funtion comment
 def make_predictions(model, df, features):
     try:
-        X_new = df[features]
+        X_new = global_le.fit_transform(df[features])
+        X_new = X_new.reshape(-1,1)
         predictions = model.predict(X_new)
         result_text.delete(1.0, tk.END)
         result_text.insert(tk.END, f"Predictions:\n{predictions}")
@@ -73,7 +79,7 @@ train_button = tk.Button(root, text="Train Model", command=lambda: train_model(d
 train_button.pack(pady=10)
 
 # Please add funtion comment
-predict_button = tk.Button(root, text="Make Predictions", command=lambda: make_predictions(model, df, features_entry.get().split(',')))
+predict_button = tk.Button(root, text="Make Predictions", command=lambda: make_predictions(global_model, df, features_entry.get().split(',')))
 predict_button.pack(pady=10)
 
 # Please add funtion comment
